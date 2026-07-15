@@ -135,6 +135,43 @@ Ref: client.address_id > address.id
 
 `car_id`, `client_id`, and `address_id` are foreign keys.
 
+##### How a JOIN actually works
+
+A JOIN is like a zipper. Each table is one side; the `ON` clause is the row of teeth deciding which pairs lock together. `ON claim.car_id = car.id` says: match a claim to a car whenever the claim's car_id equals that car's id. An INNER JOIN keeps only teeth that lock on both sides; a LEFT JOIN keeps every tooth on the left even when the right has nothing to lock onto (those gaps appear as NULL).
+
+Here's a tiny example. Two mini tables:
+
+**claim** (left)
+
+| id | car_id | claim_amt |
+|----|--------|-----------|
+| 1 | 10 | 500 |
+| 2 | 11 | 300 |
+| 3 | 99 | 200 |
+
+**car** (right)
+
+| id | car_type |
+|----|----------|
+| 10 | SUV |
+| 11 | Sedan |
+| 12 | Van |
+
+`INNER JOIN ... ON claim.car_id = car.id` — only matching rows survive (claim 3 has no car 99; car 12 has no claim):
+
+| claim.id | car_id | claim_amt | car_type |
+|----------|--------|-----------|----------|
+| 1 | 10 | 500 | SUV |
+| 2 | 11 | 300 | Sedan |
+
+`LEFT JOIN` — every claim survives, with NULL where no car matches:
+
+| claim.id | car_id | claim_amt | car_type |
+|----------|--------|-----------|----------|
+| 1 | 10 | 500 | SUV |
+| 2 | 11 | 300 | Sedan |
+| 3 | 99 | 200 | NULL |
+
 **The 4 common types of joins:**
 
 - Inner join
@@ -226,6 +263,20 @@ SELECT * FROM contractors;
 Create a master report of every claim. Include the client's name, their car type, and the city they live in.
 
 > Hint: You will need to join 4 tables.
+
+**Don't try to write all four joins in one go.** Build it up: join two tables first, check the result, then add the third — like assembling a zipper one section at a time. For example, here's the 3-table intermediate step (claim + car + client), which you can run and inspect before adding `address`:
+
+```sql
+SELECT
+  cl.id, cl.claim_date, cl.claim_amt,
+  c.car_type,
+  cli.first_name, cli.last_name
+FROM claim cl
+INNER JOIN car c ON cl.car_id = c.id
+INNER JOIN client cli ON cl.client_id = cli.id;
+```
+
+Once that looks right, add one more `INNER JOIN` to bring in the city.
 
 <details>
  <summary>Solution for Exercise 3</summary>
@@ -357,6 +408,8 @@ Result:
 | 4 | A | 500 | 4 |
 
 Ties get the same rank, and the next rank after a tie skips accordingly (e.g., two rows tied at rank 2 are followed by rank 4).
+
+There is a close cousin: `ROW_NUMBER()`. RANK() lets ties share a place and skips the next number; ROW_NUMBER() forces a strict 1,2,3 even on ties — like locker numbers, no two people can share one.
 
 #### Qualify
 

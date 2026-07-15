@@ -265,6 +265,18 @@ WHERE c.resale_value < a.avg_resale_value;
 <details>
 <summary>Click to reveal — Level Up: Insurance Auditor Project Solution</summary>
 
+### How would you attack this from a blank page?
+
+Don't try to imagine the whole query at once. Decompose it:
+
+- **Step 1 — read each requirement and ask: what is the smallest fact it needs?** Requirement 1 needs "average claim per car type" → that's one CTE. Requirement 2 needs "total claims per client" and then "rank within state" → that's a couple more.
+- **Step 2 — build one CTE per requirement.** Write it, run it *alone* (`SELECT * FROM ...` on just that piece), and check the output looks sensible.
+- **Step 3 — chain them.** Once each piece works, connect them with `WITH ... , ...` and write the final SELECT.
+
+That is exactly how the solution below was built — it looks intimidating as a finished block, but it's just four small, individually-tested queries stacked together.
+
+> **A subtlety to be aware of:** this solution groups by `(client_id, car_type)`, so a client who claims on two different car types appears twice, once per car type. That means the "top 2 per state" is really the top 2 *(client, car type)* combinations — your output can show the same client twice, which is why it may differ from a strict "top 2 clients" reading of the brief.
+
 ### Complete SQL Solution for Insurance Auditor Project
 
 ```sql
